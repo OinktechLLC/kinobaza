@@ -19,6 +19,19 @@
         .search-bar input{background:transparent;border:none;outline:none;color:white;width:100%;font-size:14px;margin-left:10px}
         .subscribe-btn{background:var(--gradient);border:none;padding:12px 24px;border-radius:10px;color:white;font-weight:700;font-size:14px;cursor:pointer;transition:transform 0.3s}
         .subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,0.4)}
+        .visit-banner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--gradient);padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(124,58,237,0.4)}
+        .visit-banner i{color:#fff}
+        .mobile-search-toggle{display:none;background:rgba(255,255,255,0.1);border:none;width:40px;height:40px;border-radius:10px;color:white;cursor:pointer;align-items:center;justify-content:center}
+        .mobile-search-panel{position:fixed;top:70px;left:0;right:0;background:rgba(15,15,26,0.98);backdrop-filter:blur(20px);padding:20px;display:none;z-index:999;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .mobile-search-panel.active{display:block}
+        .mobile-search-input{width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:14px 20px;color:white;font-size:16px;outline:none}
+        .premium-banner{position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:2px solid var(--primary);border-radius:16px;padding:20px;max-width:300px;z-index:1400;display:none;box-shadow:0 10px 40px rgba(124,58,237,0.3)}
+        .premium-banner.show{display:block}
+        .premium-banner h4{font-size:16px;font-weight:700;margin-bottom:8px;background:var(--gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .premium-banner p{font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5}
+        .premium-banner .progress-bar{background:rgba(255,255,255,0.1);border-radius:10px;height:8px;overflow:hidden;margin-bottom:12px}
+        .premium-banner .progress-fill{height:100%;background:var(--gradient);border-radius:10px;transition:width 0.3s}
+        .premium-banner .close-btn{position:absolute;top:10px;right:10px;background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:14px}
         .hero{position:relative;height:80vh;display:flex;align-items:center;padding:0 40px;margin-top:70px;overflow:hidden}
         .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(0.4)}
         .hero-content{position:relative;z-index:10;max-width:600px}
@@ -79,7 +92,7 @@
         .cookie-banner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:20px 30px;display:none;align-items:center;gap:20px;z-index:1500;max-width:600px;width:90%}
         .cookie-banner p{flex:1;font-size:13px;color:var(--text-secondary)}
         .cookie-btn{background:var(--gradient);border:none;padding:10px 24px;border-radius:8px;color:white;font-weight:600;cursor:pointer}
-        @media(max-width:768px){.header{padding:0 20px}.nav-links,.search-bar{display:none}.hero{padding:0 20px;height:60vh}.hero-title{font-size:32px}.section{padding:40px 20px}.movie-grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+        @media(max-width:768px){.header{padding:0 20px}.nav-links,.search-bar{display:none}.mobile-search-toggle{display:flex}.hero{padding:0 20px;height:60vh}.hero-title{font-size:32px}.section{padding:40px 20px}.movie-grid{grid-template-columns:repeat(2,1fr);gap:16px}.premium-banner{left:20px;right:20px;max-width:none}}
     </style>
 </head>
 <body>
@@ -94,8 +107,20 @@
             <a href="#" onclick="showPage('docs')">Docs</a>
         </nav>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="search-input" placeholder="Поиск фильмов..." onkeypress="if(event.key==='Enter')performSearch()"></div>
+        <button class="mobile-search-toggle" onclick="toggleMobileSearch()"><i class="fas fa-search"></i></button>
         <button class="subscribe-btn" onclick="openSubscribeModal()">Оформить подписку</button>
     </header>
+    <div class="mobile-search-panel" id="mobile-search-panel">
+        <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Введите название фильма или сериала..." onkeypress="if(event.key==='Enter')performMobileSearch()">
+    </div>
+    <div class="visit-banner" id="visit-banner" style="display:none;"><i class="fas fa-calendar-check"></i><span id="visit-days-text">День 1</span></div>
+    <div class="premium-banner" id="premium-banner">
+        <button class="close-btn" onclick="closePremiumBanner()"><i class="fas fa-times"></i></button>
+        <h4>KinoBAZA Premium</h4>
+        <p>Посетите сайт ещё <span id="days-left">6</span> дней и получите 20 дней доступа!</p>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:14%"></div></div>
+        <button class="btn-subscribe" onclick="openSubscribeModal()">Оформить Premium</button>
+    </div>
     <main id="page-home" class="page active" style="padding:0;">
         <section class="hero">
             <div class="hero-bg" id="hero-bg"></div>
@@ -121,7 +146,7 @@
             <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-question">Какие плееры доступны? <i class="fas fa-chevron-down"></i></div><div class="faq-answer">Kinobox, Kinoplayertop и Kinobd.net — все доступны с подпиской.</div></div>
             <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-question">Как работает система посещений? <i class="fas fa-chevron-down"></i></div><div class="faq-answer">Каждый день посещения = 1 день. 7 дней активности = 20 дней подписки.</div></div>
             <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-question">Есть ли трейлеры? <i class="fas fa-chevron-down"></i></div><div class="faq-answer">Да! Трейлеры доступны через API Кинопоиска.</div></div>
-            <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-question">Можно ли смотреть без подписки? <i class="fas fa-chevron-down"></i></div><div class="faq-answer">Нет, просмотр доступен только с активной подпиской.</div></div>
+            <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-question">Можно ли смотреть без подписки? <i class="fas fa-chevron-down"></i></div><div class="faq-answer">Да! Теперь можно читать информацию о фильмах и сериалах, а также смотреть трейлеры без подписки. Для просмотра полного фильма нужна подписка.</div></div>
         </div>
     </main>
     <main id="page-policy" class="page">
@@ -184,11 +209,17 @@ Headers: X-API-KEY: ваш_ключ</code></pre>
     <div class="cookie-banner" id="cookie-banner"><p>KinoBAZA.RU использует cookies для улучшения работы сайта.</p><button class="cookie-btn" onclick="acceptCookies()">Принять</button></div>
     <script>
         const K_TOKEN='960dc4e3-9eae-4072-8f0c-98a5ed6c0d2a',API='https://kinopoiskapiunofficial.tech/api';
-        let state={currentMovieId:null,playerSource:'kinobox',hasSubscription:false,visitDays:0};
-        document.addEventListener('DOMContentLoaded',()=>{checkSubscription();loadHeroContent();loadTrending();loadSeasonCollection();showCookieBanner();updateVisitCounter();});
+        let state={currentMovieId:null,playerSource:'kinobox',hasSubscription:false,visitDays:0,movieModalOpen:false};
+        document.addEventListener('DOMContentLoaded',()=>{checkSubscription();loadHeroContent();loadTrending();loadSeasonCollection();showCookieBanner();updateVisitCounter();showPremiumBanner();});
         function checkSubscription(){const s=localStorage.getItem('kinobaza_subscription');if(s){const d=JSON.parse(s);if(d.expiresAt>new Date().getTime())state.hasSubscription=true;}}
-        function updateVisitCounter(){const t=new Date().toDateString(),v=JSON.parse(localStorage.getItem('kinobaza_visits')||'{"days":0,"lastVisit":null}');if(v.lastVisit!==t){v.days+=1;v.lastVisit=t;localStorage.setItem('kinobaza_visits',JSON.stringify(v));state.visitDays=v.days;if(v.days>=7)activateSubscription();}else{state.visitDays=v.days;}}
-        function activateSubscription(){const n=new Date();localStorage.setItem('kinobaza_subscription',JSON.stringify({activatedAt:n.getTime(),expiresAt:n.getTime()+(20*24*60*60*1000),visitDays:state.visitDays}));state.hasSubscription=true;closeSubscribeModal();alert('Подписка активирована! 20 дней полного доступа.');}
+        function updateVisitCounter(){const t=new Date().toDateString(),v=JSON.parse(localStorage.getItem('kinobaza_visits')||'{"days":0,"lastVisit":null}');if(v.lastVisit!==t){v.days+=1;v.lastVisit=t;localStorage.setItem('kinobaza_visits',JSON.stringify(v));state.visitDays=v.days;if(v.days>=7)activateSubscription();}else{state.visitDays=v.days;}updateVisitBanner();updatePremiumBanner();}
+        function updateVisitBanner(){const banner=document.getElementById('visit-banner'),text=document.getElementById('visit-days-text');if(state.visitDays>0){banner.style.display='flex';text.textContent=`День ${state.visitDays} из 7`;}}
+        function updatePremiumBanner(){const daysLeft=Math.max(0,7-state.visitDays),progress=(state.visitDays/7)*100;document.getElementById('days-left').textContent=daysLeft;document.getElementById('progress-fill').style.width=progress+'%';}
+        function showPremiumBanner(){if(!state.hasSubscription&&state.visitDays<7){setTimeout(()=>{document.getElementById('premium-banner').classList.add('show');},3000);}}
+        function closePremiumBanner(){document.getElementById('premium-banner').classList.remove('show');}
+        function toggleMobileSearch(){document.getElementById('mobile-search-panel').classList.toggle('active');}
+        function performMobileSearch(){const q=document.getElementById('mobile-search-input').value;if(!q.trim())return;performSearchWithQuery(q);document.getElementById('mobile-search-panel').classList.remove('active');}
+        function activateSubscription(){const n=new Date();localStorage.setItem('kinobaza_subscription',JSON.stringify({activatedAt:n.getTime(),expiresAt:n.getTime()+(20*24*60*60*1000),visitDays:state.visitDays}));state.hasSubscription=true;closeSubscribeModal();closePremiumBanner();alert('Подписка активирована! 20 дней полного доступа.');}
         function openSubscribeModal(){document.getElementById('subscribe-modal').classList.add('active');}
         function closeSubscribeModal(){document.getElementById('subscribe-modal').classList.remove('active');}
         function showPage(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+n).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
@@ -198,15 +229,19 @@ Headers: X-API-KEY: ваш_ключ</code></pre>
         async function loadHeroContent(){try{const r=await fetch(API+'/v2.2/films/top?type=TOP_100_POPULAR_FILMS&page=1',{headers:{'X-API-KEY':K_TOKEN}}),d=await r.json(),f=d.films[Math.floor(Math.random()*6)],id=f.kinopoiskId||f.filmId,name=f.nameRu||f.nameEn;document.getElementById('hero-bg').style.backgroundImage=`url('${f.posterUrl}')`;document.getElementById('hero-title').textContent=name;document.getElementById('hero-meta').textContent=`${f.year} • ${f.rating||'HD'} • ${f.genres?.[0]?.genre||''}`;document.getElementById('hero-play').onclick=()=>checkAccessAndPlay(id,name);document.getElementById('hero-info').onclick=()=>showMovieDetails(id);}catch(e){console.error(e);}}
         async function loadTrending(){try{const r=await fetch(API+'/v2.2/films/top?type=TOP_100_POPULAR_FILMS&page=1',{headers:{'X-API-KEY':K_TOKEN}}),d=await r.json();renderGrid(d.films,'trending-grid');}catch(e){console.error(e);}}
         async function loadSeasonCollection(){const m=new Date().getMonth();let s='Что посмотреть';if([11,0,2].includes(m))s='Зимняя подборка';else if([5,6,7].includes(m))s='Летняя подборка';else if([8,9,10].includes(m))s='Осенняя подборка';else s='Весенняя подборка';document.getElementById('season-title').textContent=s;try{const r=await fetch(API+'/v2.2/films/top?type=TOP_250_BEST_FILMS&page=2',{headers:{'X-API-KEY':K_TOKEN}}),d=await r.json();renderGrid(d.films.slice(0,8),'season-grid');}catch(e){console.error(e);}}
-        function renderGrid(films,target){const c=document.getElementById(target);c.innerHTML='';films.forEach(f=>{const id=f.kinopoiskId||f.filmId,name=f.nameRu||f.nameEn||'Без названия',card=document.createElement('div');card.className='movie-card';card.onclick=()=>checkAccessAndPlay(id,name);card.innerHTML=`<img src="${f.posterUrlPreview}" class="movie-poster" loading="lazy"><div class="movie-info"><div class="movie-title">${name}</div><div class="movie-meta">${f.year} • ${f.rating?'★ '+f.rating:'HD'}</div></div>`;c.appendChild(card);});}
+        function renderGrid(films,target){const c=document.getElementById(target);c.innerHTML='';films.forEach(f=>{const id=f.kinopoiskId||f.filmId,name=f.nameRu||f.nameEn||'Без названия',card=document.createElement('div');card.className='movie-card';card.onclick=()=>showMovieDetails(id);card.innerHTML=`<img src="${f.posterUrlPreview}" class="movie-poster" loading="lazy"><div class="movie-info"><div class="movie-title">${name}</div><div class="movie-meta">${f.year} • ${f.rating?'★ '+f.rating:'HD'}</div></div>`;c.appendChild(card);});}
         function checkAccessAndPlay(id,title){if(!state.hasSubscription){document.getElementById('sub-required').classList.add('active');return;}playMovie(id,title);}
         function playMovie(id,title){state.currentMovieId=id;document.getElementById('player-overlay').classList.add('active');initPlayer();}
         function initPlayer(){const c=document.getElementById('player-container');c.innerHTML=`<div id="current-player" style="width:100%;height:100%;"></div>`;if(state.playerSource==='kinobox'&&typeof kinobox!=='undefined'){kinobox('#current-player',{search:{kinopoisk:state.currentMovieId},players:['alloha','kodik','collaps','videocdn']});}else if(state.playerSource==='uploads'){const s=document.createElement('script');s.src='https://kinoplayertop.tatnet.app/kinoplayer.js';s.onload=()=>{if(typeof window.kinobox!=='undefined')window.kinobox('#current-player',{search:{kinopoisk:state.currentMovieId}});};document.head.appendChild(s);}else if(state.playerSource==='kinobd'){c.innerHTML=`<div data-kinopoisk="${state.currentMovieId}" id="kinobd-player" style="width:100%;height:100%;"></div>`;const s=document.createElement('script');s.src='https://kinobd.net/js/player_.js';document.head.appendChild(s);}}
         function setPlayerSource(src){state.playerSource=src;document.querySelectorAll('.source-btn').forEach(b=>b.classList.remove('active'));document.getElementById('src-'+src).classList.add('active');initPlayer();}
         function closePlayer(){document.getElementById('player-overlay').classList.remove('active');document.getElementById('player-container').innerHTML='';state.currentMovieId=null;}
-        async function performSearch(){const q=document.getElementById('search-input').value;if(!q.trim())return;try{const r=await fetch(API+'/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(q),{headers:{'X-API-KEY':K_TOKEN}}),d=await r.json();if(d.films&&d.films.length>0){showPage('movies');renderGrid(d.films,'movies-grid');}}catch(e){console.error(e);}}
-        function showMovieDetails(id){checkAccessAndPlay(id,'');}
-        document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePlayer();closeSubscribeModal();document.getElementById('sub-required').classList.remove('active');}});
+        async function performSearch(){const q=document.getElementById('search-input').value;if(!q.trim())return;performSearchWithQuery(q);}
+        async function performSearchWithQuery(q){try{const r=await fetch(API+'/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(q),{headers:{'X-API-KEY':K_TOKEN}}),d=await r.json();if(d.films&&d.films.length>0){showPage('movies');renderGrid(d.films,'movies-grid');}}catch(e){console.error(e);}}
+        async function showMovieDetails(id){try{const r=await fetch(API+'/v2.2/films/'+id,{headers:{'X-API-KEY':K_TOKEN}}),film=await r.json();openMovieModal(film);}catch(e){console.error(e);}}
+        function openMovieModal(film){const id=film.kinopoiskId||film.filmId,name=film.nameRu||film.nameEn||'Без названия',desc=film.description||'Описание отсутствует',year=film.year,rating=film.rating||'N/A',genres=film.genres?.map(g=>g.genre).join(', ')||'Не указано',countries=film.countries?.map(c=>c.country).join(', ')||'Не указано',duration=film.filmLength?`${Math.floor(film.filmLength/60)}ч ${film.filmLength%60}м`:'N/A',trailerId=film.trailer?.id||null;const modal=document.createElement('div');modal.className='modal-overlay active';modal.id='movie-details-modal';modal.innerHTML=`<div class="subscription-modal" style="max-width:700px;"><button class="close-player" onclick="closeMovieModal()" style="position:absolute;top:20px;right:20px;background:transparent;"><i class="fas fa-times"></i></button><div style="display:flex;gap:30px;flex-wrap:wrap;"><img src="${film.posterUrlPreview||film.posterUrl}" style="width:200px;border-radius:16px;object-fit:cover;"><div style="flex:1;min-width:250px;"><h2 style="font-size:28px;font-weight:800;margin-bottom:10px;">${name}</h2><p style="color:var(--text-secondary);margin-bottom:20px;line-height:1.6;">${desc}</p><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;font-size:14px;color:var(--text-secondary);"><div><strong>Год:</strong> ${year}</div><div><strong>Рейтинг:</strong> ${rating}</div><div><strong>Жанр:</strong> ${genres}</div><div><strong>Страна:</strong> ${countries}</div><div><strong>Длительность:</strong> ${duration}</div></div><div style="display:flex;gap:15px;flex-wrap:wrap;"><button class="btn-primary" onclick="checkAccessAndPlay(${id},'${name.replace(/'/g,"\\'")}')"><i class="fas fa-play"></i> Смотреть фильм</button>${trailerId?`<button class="btn-secondary" onclick="playTrailer('${trailerId}')"><i class="fas fa-film"></i> Трейлер</button>`:''}</div></div></div></div>`;document.body.appendChild(modal);state.movieModalOpen=true;}
+        function closeMovieModal(){const modal=document.getElementById('movie-details-modal');if(modal){modal.remove();}state.movieModalOpen=false;}
+        function playTrailer(trailerId){const overlay=document.getElementById('player-overlay');overlay.classList.add('active');const container=document.getElementById('player-container');container.innerHTML=`<iframe src="https://www.kinopoisk.ru/trailer/${trailerId}/embedded/" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>`;}
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePlayer();closeSubscribeModal();document.getElementById('sub-required').classList.remove('active');closeMovieModal();}});
     </script>
 </body>
 </html>
